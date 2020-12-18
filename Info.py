@@ -1,13 +1,10 @@
-from ics import Calendar, Event
 import time
 import json
-from pygrocy import Grocy
-import CalendarHandler
-from discord.ext import commands
 
 
 
-class ServerInformation(commands.Cog):
+
+class ServerInformation():
 
     def __init__(self,server_info_path):
         self.server_info = None
