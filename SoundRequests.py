@@ -1,23 +1,37 @@
 from discord.ext import commands, tasks
+import discord.utils
 import discord
 import Sound
 import time
 import threading
+import io
+import asyncio
 
 class SoundManagment(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
         self.queue = []
-        self.song_thread = None
-   
+        self.task = None
+
     @commands.command()
     async def queue(self,ctx):
-        string = "```"
-        for i,audio in enumerate(self.queue):
-            string += str(i)+". "+audio.title+" \n"
-        string += "```"
-        await ctx.send(string)
+        if len(self.queue) > 0:
+            string = "```"
+            for i,audio in enumerate(self.queue):
+                string += str(i)+". "+audio.title+" \n"
+            string += "```"
+            await ctx.send(string)
+        else:
+            await ctx.send("Queue is empty.")
 
+    @commands.command()
+    async def stop(self,ctx):
+        
+        while len(self.queue) > 1:
+            self.queue.pop()
+        await self.skip.invoke(ctx)
+        await ctx.send("The Queue have been cleared and I have stoped :(")
+        
 
 
     @commands.command()
@@ -28,8 +42,7 @@ class SoundManagment(commands.Cog):
         else:
             self.queue.append(new_youtube_audio)
             await ctx.send(new_youtube_audio.title+" has been added to the queue. In position "+str(len(self.queue)))
-            await self.audio_in_voice()
-
+            
     @commands.command()
     async def say(self,ctx,name):
         new_audio =  Sound.LocalSound(ctx,name)
@@ -38,47 +51,41 @@ class SoundManagment(commands.Cog):
         else:
             self.queue.append(new_audio)
             await ctx.send(new_audio.title+" has been added to the queue. In position "+str(len(self.queue)))
-            await self.audio_in_voice()
-
+            
+       
+    @tasks.loop(seconds=1.0,reconnect=True)
+    async def check_queue(self):
+        if self.task is None and len(self.queue) > 0:        
+            self.task = asyncio.create_task(self.audio_in_voice())
+    
+        
+    @commands.command()
+    async def skip(self,ctx):
+        vc = discord.utils.get(self.bot.voice_clients,guild=ctx.guild)
+        if vc and vc.is_connected():
+            await vc.disconnect()
+    
 
     async def audio_in_voice(self):
         # have to use these options so it doesnt error out mid way thorugh song
         FFMPEG_OPTIONS = {
-            'before_options': '-re reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-            'options': '-vn ',
+            'before_options': '-re ',
+            'options': '-acodec pcm_s16be -ar 44100 -ac 2 -payload_type 10 ',
             'executable' : "/bin/ffmpeg"}
 
         if len(self.queue) >= 1:
+
             track = self.queue[0]
+
             vc = await track.voice_channel.connect()
-            vc.play(discord.FFmpegOpusAudio(track.path,options=FFMPEG_OPTIONS))
+            vc.play(discord.FFmpegPCMAudio(track.path,options=FFMPEG_OPTIONS))
             # Sleep while audio is playing.
             while vc.is_playing():
-                print(track.title)
-                time.sleep(1)
-            await vc.disconnect()
-    '''
-    @tasks.loop(seconds=1.0,reconnect=True)
-    async def check_queue(self):
-        self.trim_tracked_chores()
+                await asyncio.sleep(1)
 
-        # this check must be done because on the first run of loop it will return a None object because boot has 
-        # not connected
-        
-        todays_chores = Info.ChoreInfo(self.bot.get_cog("ServerInformation").server_info).get_todays_chores()
+            self.queue.pop(0)
+            self.task = None
+            if len(self.queue) == 0:
+                await vc.disconnect()
 
-        if todays_chores != None:
-            channel = self.bot.get_channel(self.info["House"]["remind_channel"])
-            for i in todays_chores:
-                if i.id not in self.notified_chores:
-                    if i.name == "garbage_carry" and 
-                    message_string = "You have to"+i.name+ " . It requires you to "+i.description+"."
-                    user = self.bot.get_user(self.info["House"]["users"][i.next_execution_assigned_user.first_name])
-
-                    if user != None and channel != None:
-                                    
-                        self.notified_chores[i.id] =  time.localtime((time.time()))
-                        
-                        await channel.send(user.mention+" "+self.generate_open()+". "+message_string)
-    '''       
-
+    

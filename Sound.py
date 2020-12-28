@@ -11,7 +11,6 @@ def get_acceptable_audio_formats():
 
 class Sound:
     
-
     def __init__(self,ctx):
         self.path = None
         self.title = None
@@ -20,9 +19,7 @@ class Sound:
         self.prefix = Info.ServerInformation("Data Files/server_info.json").server_info["audio_dir"]
 
 
-
     def validate_file(self):
-        print(tuple(get_acceptable_audio_formats()))
         if self.path != None:
             self.is_valid = os.path.exists(self.path) and "."+self.path.split(".")[-1] in tuple(get_acceptable_audio_formats())
         else:
@@ -34,7 +31,6 @@ class LocalSound(Sound):
         self.title = self.find_files(title)
         self.path = self.prefix+self.title
         self.validate_file()
-        print(self.is_valid)
 
     def find_files(self,title):
         for i in os.listdir(self.prefix):

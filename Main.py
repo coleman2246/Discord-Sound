@@ -9,7 +9,7 @@ bot = commands.Bot(command_prefix='$')
 
 
 bot.add_cog(SoundRequests.SoundManagment(bot))
-
+bot.get_cog("SoundManagment").check_queue.start()
 
 
 

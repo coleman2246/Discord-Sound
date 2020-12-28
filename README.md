@@ -5,3 +5,4 @@
 - python 3.85  
 - [youtube-dl](https://pypi.org/project/youtube_dl/)
 - PyNaCl
+- asyncio
