@@ -38,8 +38,6 @@ class LocalSound(Sound):
                 return i
         return "zzzzzzzzz"
 
-#t = LocalSound("test")
-
 class YoutubeSound(Sound):
 
     def __init__(self,ctx,url):

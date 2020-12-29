@@ -6,33 +6,33 @@ import time
 import threading
 import io
 import asyncio
+import Info
 
 class SoundManagment(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
         self.queue = []
         self.task = None
-
+        
     @commands.command()
     async def queue(self,ctx):
         if len(self.queue) > 0:
             string = "```"
             for i,audio in enumerate(self.queue):
-                string += str(i)+". "+audio.title+" \n"
+                string += str(i+1)+". "+audio.title+" \n"
             string += "```"
             await ctx.send(string)
         else:
             await ctx.send("Queue is empty.")
 
-    @commands.command()
+    @commands.command()    
     async def stop(self,ctx):
         
-        while len(self.queue) > 1:
+        while len(self.queue) > 0:
             self.queue.pop()
         await self.skip.invoke(ctx)
         await ctx.send("The Queue have been cleared and I have stoped :(")
         
-
 
     @commands.command()
     async def play(self,ctx,url):
@@ -43,6 +43,10 @@ class SoundManagment(commands.Cog):
             self.queue.append(new_youtube_audio)
             await ctx.send(new_youtube_audio.title+" has been added to the queue. In position "+str(len(self.queue)))
             
+    def get_non_volatile(self):
+        dir = self.info.server_info["audio_dir"]
+        return ""
+
     @commands.command()
     async def say(self,ctx,name):
         new_audio =  Sound.LocalSound(ctx,name)
@@ -82,10 +86,9 @@ class SoundManagment(commands.Cog):
             # Sleep while audio is playing.
             while vc.is_playing():
                 await asyncio.sleep(1)
-
+            print("Song is Over")
             self.queue.pop(0)
             self.task = None
-            if len(self.queue) == 0:
-                await vc.disconnect()
+            await vc.disconnect()
 
     
