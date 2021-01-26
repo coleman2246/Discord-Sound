@@ -1,11 +1,16 @@
+
+import time
+import re
+
 from discord.ext import commands, tasks
+import shutil
 import discord.utils
 import discord
+from urllib.parse import urlparse
+import requests
+
 import Info
 import Sound
-import requests
-import shutil
-
 class Utils(commands.Cog):
     def __init__(self,bot):
         self.info = Info.ServerInformation("Data Files/server_info.json").server_info
@@ -101,3 +106,16 @@ class Utils(commands.Cog):
                     await message.channel.send( "```Your Sound has Been Added Use $say "+file_name[:-4]+" to use it```")
                 else:
                     await message.channel.send( "```There was a problem adding your sound```")
+        
+    @staticmethod
+    def get_rss_xml(url):
+
+
+        header = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0", "Accept-Encoding":"gzip, deflate", "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "DNT":"1","Connection":"close", "Upgrade-Insecure-Requests":"1"}    
+        
+        try:
+            return requests.get(url,headers=header).text
+        except:
+            print("Failed to get : "+url)
+
+    
