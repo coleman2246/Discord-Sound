@@ -28,6 +28,7 @@ class Sound:
 class LocalSound(Sound):
     def __init__(self,ctx,title):
         super().__init__(ctx) 
+
         self.title = self.find_files(title)
         self.path = self.prefix+self.title
         self.validate_file()

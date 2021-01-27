@@ -13,7 +13,7 @@ import Info
 import Sound
 class Utils(commands.Cog):
     def __init__(self,bot):
-        self.info = Info.ServerInformation("Data Files/server_info.json").server_info
+        self.info = Info.ServerInformation("Data Files/server_info.json")
         self.bot = bot
 
 
@@ -35,7 +35,8 @@ class Utils(commands.Cog):
 
     @commands.command()
     async def help(self,ctx):
-        commands = self.info["command_help"]
+        self.info.update()
+        commands = self.info.server_info["command_help"]
         keys = sorted(commands.keys())
 
         max_len = self.max_length(keys)
@@ -50,7 +51,8 @@ class Utils(commands.Cog):
 
     @commands.command()
     async def sounds(self,ctx):
-        files = sorted(self.info["audio_files"])
+        self.info.update()
+        files = sorted(self.info.server_info["audio_files"])
         max_len = self.max_length(files)
 
         message = "```Sounds: \n"
@@ -63,10 +65,10 @@ class Utils(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self,message):
         acceptable_formats = Sound.get_acceptable_audio_formats()
-        request_channel = self.info["request_channel"]
+        request_channel = self.info.server_info["request_channel"]
 
         #so this function does not overide the other commands
-        await self.bot.process_commands(message)
+        #await self.bot.process_commands(message)
         
 
         if str(message.author) == "Mood Bot#2255":
@@ -91,22 +93,22 @@ class Utils(commands.Cog):
             if not (file_no_exstension in acceptable_formats):
                 await message.channel.send( "```You're Sending a Format That is Not Supported```")
             
-            elif file_no_exstension in self.info["audio_files"]:
+            elif file_no_exstension in self.info.server_info["audio_files"]:
                 await message.channel.send( "```A file with the same name has been sent```")
             
             else:
                 r = requests.get(url,verify=False,stream=True)
                 r.raw.decode_content = True
 
-                with open(self.info["audio_dir"]+file_name, 'wb') as f:
+                with open(self.info.server_info["audio_dir"]+file_name, 'wb') as f:
                     shutil.copyfileobj(r.raw, f)
                 
-                sound = Sound.LocalSound(file_name)
-                if sound.is_valid:
-                    await message.channel.send( "```Your Sound has Been Added Use $say "+file_name[:-4]+" to use it```")
-                else:
-                    await message.channel.send( "```There was a problem adding your sound```")
-        
+                #sound = Sound.LocalSound(None,file_name,verify=False)
+                #if sound.is_valid:
+                await message.channel.send( "```Your Sound has Been Added Use $say "+file_name[:-4]+" to use it```")
+                #else:
+                #    await message.channel.send( "```There was a problem adding your sound```")
+      
     @staticmethod
     def get_rss_xml(url):
 

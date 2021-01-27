@@ -7,9 +7,11 @@ import json
 class ServerInformation():
 
     def __init__(self,server_info_path):
-        self.server_info = None
+        self.server_info_path = server_info_path
+        self.update()
 
 
-        with open(server_info_path,'r') as f:
+    def update(self):
+        with open(self.server_info_path,'r') as f:
             self.server_info = json.load(f)
 
