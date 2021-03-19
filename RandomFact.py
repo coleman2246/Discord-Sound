@@ -1,5 +1,9 @@
 import re
 import io
+from os import listdir
+import random            
+            
+
 
 from discord.ext import commands, tasks
 import discord.utils
@@ -14,22 +18,17 @@ class Fact(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
         
-        self.rss_link = bot.get_cog("Utils").info["rss_link"]
-        self.channel_num = int(bot.get_cog("Utils").info["fact channel"])
+        self.images_files = listdir("Data Files/Random Facts")
+        self.channel_num = int(bot.get_cog("Utils").info.server_info["fact channel"])
         
-    # returns the url 
     def get_fact_image(self):
-        xml = GeneralUtils.Utils.get_rss_xml(self.rss_link)
+        path = ""
+        while(path == ""):
+            num = random.randint(0,len(self.images_files)-1)
+            if self.images_files[num] != "keep":
+                path = self.images_files[num]
 
-        soup = BeautifulSoup(xml,"xml")
-        
-        # finds first occurnce, should always be newest
-        picture_urls = soup.find("item").find("description")
-        url = re.findall('"([^"]*)"',str(picture_urls))[0]
-       
-        req = urllib.request.urlopen(url)
-        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-        img = cv2.imdecode(arr, -1)[0:475, 0:-1]
+        img = cv2.imread("Data Files/Random Facts/"+path)[0:475, 0:-1]
 
         return img
 
@@ -44,3 +43,4 @@ class Fact(commands.Cog):
 
         channel = self.bot.get_channel(id=self.channel_num)
         await channel.send(file = discord.File(io_buf))
+
